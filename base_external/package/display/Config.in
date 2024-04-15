@@ -1,0 +1,4 @@
+config BR2_PACKAGE_DISPLAY
+	bool "display"
+	help
+	  Includes the display init
