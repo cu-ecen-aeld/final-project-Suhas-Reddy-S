@@ -4,16 +4,23 @@
 #
 ################################################################################
 
-AUDIT_VERSION = 2.8.5
+AUDIT_VERSION = 3.1.2
 AUDIT_SITE = http://people.redhat.com/sgrubb/audit
 AUDIT_LICENSE = GPL-2.0+ (programs), LGPL-2.1+ (libraries)
 AUDIT_LICENSE_FILES = COPYING COPYING.LIB
-# 0002-Add-substitue-functions-for-strndupa-rawmemchr.patch
-AUDIT_AUTORECONF = YES
+AUDIT_CPE_ID_VENDOR = linux_audit_project
+AUDIT_CPE_ID_PRODUCT = linux_audit
 
 AUDIT_INSTALL_STAGING = YES
 
 AUDIT_CONF_OPTS = --without-python --without-python3 --disable-zos-remote
+
+# src/libev has some assembly function that is not present in Thumb mode:
+# Error: selected processor does not support `mcr p15,0,r3,c7,c10,5' in Thumb mode
+# so, we desactivate Thumb mode
+ifeq ($(BR2_ARM_INSTRUCTIONS_THUMB),y)
+AUDIT_CONF_ENV += CFLAGS="$(TARGET_CFLAGS) -marm"
+endif
 
 ifeq ($(BR2_PACKAGE_LIBCAP_NG),y)
 AUDIT_DEPENDENCIES += libcap-ng
@@ -53,6 +60,11 @@ define AUDIT_INSTALL_CLEANUP
 	$(RM) $(TARGET_DIR)/etc/sysconfig/auditd
 endef
 AUDIT_POST_INSTALL_TARGET_HOOKS += AUDIT_INSTALL_CLEANUP
+
+define AUDIT_LINUX_CONFIG_FIXUPS
+	$(call KCONFIG_ENABLE_OPT,CONFIG_NET)
+	$(call KCONFIG_ENABLE_OPT,CONFIG_AUDIT)
+endef
 
 HOST_AUDIT_CONF_OPTS = \
 	--without-python \

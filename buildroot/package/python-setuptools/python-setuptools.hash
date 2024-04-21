@@ -1,4 +1,5 @@
-# From https://pypi.org/pypi/setuptools/json
-md5  89a592d733b31e180a4b6ad760c0685a  setuptools-41.4.0.zip
-sha256  7eae782ccf36b790c21bde7d86a4f303a441cd77036b25c559a602cf5186ce4d  setuptools-41.4.0.zip
-sha256  c32a3ac395af6321efd28be73d06a00f0db6ab887d1c21d4fec46128d2056d5a  LICENSE
+# md5, sha256 from https://pypi.org/pypi/setuptools/json
+md5  b82de45aaa6b9bb911226660212ebb83  setuptools-69.0.3.tar.gz
+sha256  be1af57fc409f93647f2e8e4573a142ed38724b8cdd389706a867bb4efcf1e78  setuptools-69.0.3.tar.gz
+# Locally computed sha256 checksums
+sha256  86da0f01aeae46348a3c3d465195dc1ceccde79f79e87769a64b8da04b2a4741  LICENSE

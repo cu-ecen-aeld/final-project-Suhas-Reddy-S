@@ -1,6 +1,6 @@
-# retrieved by scancpan from http://cpan.metacpan.org/
-md5    a3b2c1129f02cc5ce5de59d506afab1a Date-Manip-6.79.tar.gz
-sha256 71a8c42ce4edbd46a3ca2a17a7218ceed958cd7ad0dfeb79389f23d0f466943a Date-Manip-6.79.tar.gz
+# retrieved by scancpan from https://cpan.metacpan.org/
+md5  74f127ff4c71fa1aff54dc55818b0c2e  Date-Manip-6.94.tar.gz
+sha256  0278eb62113618c8977d3d537433d85340c487cbdfd95dd3452e4d7217f48848  Date-Manip-6.94.tar.gz
 
 # computed by scancpan
-sha256 8ba2a138654f8b59b7e1e3ad0d4c81918b9148ff95078b172ccbb45fa241431d LICENSE
+sha256  8ba2a138654f8b59b7e1e3ad0d4c81918b9148ff95078b172ccbb45fa241431d  LICENSE

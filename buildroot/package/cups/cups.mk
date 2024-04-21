@@ -4,11 +4,13 @@
 #
 ################################################################################
 
-CUPS_VERSION = 2.3.1
+CUPS_VERSION = 2.4.7
 CUPS_SOURCE = cups-$(CUPS_VERSION)-source.tar.gz
-CUPS_SITE = https://github.com/apple/cups/releases/download/v$(CUPS_VERSION)
+CUPS_SITE = https://github.com/OpenPrinting/cups/releases/download/v$(CUPS_VERSION)
 CUPS_LICENSE = Apache-2.0 with GPL-2.0/LGPL-2.0 exception
 CUPS_LICENSE_FILES = LICENSE NOTICE
+CUPS_CPE_ID_VENDOR = openprinting
+CUPS_SELINUX_MODULES = cups
 CUPS_INSTALL_STAGING = YES
 
 # Using autoconf, not autoheader, so we cannot use AUTORECONF = YES.
@@ -21,7 +23,12 @@ CUPS_CONF_OPTS = \
 	--with-docdir=/usr/share/cups/doc-root \
 	--disable-gssapi \
 	--disable-pam \
-	--libdir=/usr/lib
+	--libdir=/usr/lib \
+	--with-cups-user=lp \
+	--with-cups-group=lp \
+	--with-system-groups="lpadmin sys root" \
+	--disable-libpaper \
+	--without-rcdir
 CUPS_CONFIG_SCRIPTS = cups-config
 CUPS_DEPENDENCIES = \
 	host-autoconf \
@@ -30,10 +37,8 @@ CUPS_DEPENDENCIES = \
 
 ifeq ($(BR2_PACKAGE_SYSTEMD),y)
 CUPS_CONF_OPTS += --with-systemd=/usr/lib/systemd/system \
-	--enable-systemd
+	--with-ondemand=systemd
 CUPS_DEPENDENCIES += systemd
-else
-CUPS_CONF_OPTS += --disable-systemd
 endif
 
 ifeq ($(BR2_PACKAGE_DBUS),y)
@@ -44,10 +49,13 @@ CUPS_CONF_OPTS += --disable-dbus
 endif
 
 ifeq ($(BR2_PACKAGE_GNUTLS),y)
-CUPS_CONF_OPTS += --enable-gnutls
+CUPS_CONF_OPTS += --with-tls=gnutls
 CUPS_DEPENDENCIES += gnutls
+else ifeq ($(BR2_PACKAGE_OPENSSL),y)
+CUPS_CONF_OPTS += --with-tls=openssl
+CUPS_DEPENDENCIES += openssl
 else
-CUPS_CONF_OPTS += --disable-gnutls
+CUPS_CONF_OPTS += --with-tls=no
 endif
 
 ifeq ($(BR2_PACKAGE_LIBUSB),y)
@@ -57,18 +65,32 @@ else
 CUPS_CONF_OPTS += --disable-libusb
 endif
 
-ifeq ($(BR2_PACKAGE_LIBPAPER),y)
-CUPS_CONF_OPTS += --enable-libpaper
-CUPS_DEPENDENCIES += libpaper
+ifeq ($(BR2_PACKAGE_AVAHI_LIBAVAHI_CLIENT),y)
+CUPS_DEPENDENCIES += avahi
+CUPS_CONF_OPTS += --with-dnssd=avahi
 else
-CUPS_CONF_OPTS += --disable-libpaper
+CUPS_CONF_OPTS += --with-dnssd=no
 endif
 
-ifeq ($(BR2_PACKAGE_AVAHI),y)
-CUPS_DEPENDENCIES += avahi
-CUPS_CONF_OPTS += --enable-avahi
-else
-CUPS_CONF_OPTS += --disable-avahi
+ifeq ($(BR2_PACKAGE_HAS_UDEV),y)
+define CUPS_INSTALL_UDEV_RULES
+	$(INSTALL) -D -m 0644 package/cups/70-usb-printers.rules \
+		$(TARGET_DIR)/lib/udev/rules.d/70-usb-printers.rules
+endef
+
+CUPS_POST_INSTALL_TARGET_HOOKS += CUPS_INSTALL_UDEV_RULES
 endif
+
+define CUPS_INSTALL_INIT_SYSV
+	$(INSTALL) -D -m 0755 package/cups/S81cupsd \
+		$(TARGET_DIR)/etc/init.d/S81cupsd
+endef
+
+# lp user is needed to run cups spooler
+# lpadmin group membership grants administrative privileges
+define CUPS_USERS
+	lp -1 lp -1 * /var/spool/lpd /bin/false - lp
+	- - lpadmin -1 * - - - Printers admin group.
+endef
 
 $(eval $(autotools-package))

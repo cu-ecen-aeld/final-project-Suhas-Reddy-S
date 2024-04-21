@@ -1,3 +1,8 @@
 # From http://www.netfilter.org/projects/libnftnl/downloads.html
-sha256	66de4d05227c0a1a731c369b193010d18a05b1185c2735211e0ecf658eeb14f3	libnftnl-1.1.5.tar.bz2
-sha256	98193898c663001eff2fdcfb676e210c13042bc1a05e8d570c363efa396f8e24	COPYING
+# Checked pgp signature:
+# https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.2.6.tar.xz.sig
+# with key:
+# https://www.netfilter.org/files/coreteam-gpg-key-0xD55D978A8A1420E4.txt
+sha256  ceeaea2cd92147da19f13a35a7f1a4bc2767ff897e838e4b479cf54b59c777f4  libnftnl-1.2.6.tar.xz
+# Locally computed:
+sha256  98193898c663001eff2fdcfb676e210c13042bc1a05e8d570c363efa396f8e24  COPYING

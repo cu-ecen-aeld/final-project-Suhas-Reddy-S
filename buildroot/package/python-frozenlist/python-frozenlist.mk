@@ -4,11 +4,11 @@
 #
 ################################################################################
 
-PYTHON_FROZENLIST_VERSION = 1.0.0
+PYTHON_FROZENLIST_VERSION = 1.4.1
 PYTHON_FROZENLIST_SOURCE = frozenlist-$(PYTHON_FROZENLIST_VERSION).tar.gz
-PYTHON_FROZENLIST_SITE = https://files.pythonhosted.org/packages/85/32/12f1247bf4915b74a00264aa0033745ee871759daee47499641bd13aeee7
+PYTHON_FROZENLIST_SITE = https://files.pythonhosted.org/packages/cf/3d/2102257e7acad73efc4a0c306ad3953f68c504c16982bbdfee3ad75d8085
 PYTHON_FROZENLIST_SETUP_TYPE = setuptools
 PYTHON_FROZENLIST_LICENSE = Apache-2.0
-PYTHON_FROZENLIST_LICENSE_FILES = LICENSE.txt
+PYTHON_FROZENLIST_LICENSE_FILES = LICENSE
 
 $(eval $(python-package))

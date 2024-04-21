@@ -33,9 +33,8 @@ main() {
     # Trap any unexpected error to generate a meaningful error message
     trap "error 'unexpected error while generating ${ofile}\n'" ERR
 
-    do_validate ${@//:/ }
-
     mkdir -p "${outputdir}"
+    do_validate "${outputdir}" ${@//:/ }
     do_mk "${outputdir}"
     do_kconfig "${outputdir}"
 }
@@ -51,7 +50,9 @@ main() {
 # snippet means that there were no error.
 #
 do_validate() {
+    local outputdir="${1}"
     local br2_ext
+    shift
 
     if [ ${#} -eq 0 ]; then
         # No br2-external tree is valid
@@ -60,12 +61,12 @@ do_validate() {
 
     for br2_ext in "${@}"; do
         do_validate_one "${br2_ext}"
-    done
+    done >"${outputdir}/.br2-external.mk"
 }
 
 do_validate_one() {
     local br2_ext="${1}"
-    local br2_name br2_desc n d
+    local br2_name br2_desc br2_ver n d
 
     if [ ! -d "${br2_ext}" ]; then
         error "'%s': no such file or directory\n" "${br2_ext}"
@@ -74,7 +75,7 @@ do_validate_one() {
         error "'%s': permission denied\n" "${br2_ext}"
     fi
     if [ ! -f "${br2_ext}/external.desc" ]; then
-        error "'%s': does not have a name (in 'external.desc'). See %s\n" \
+        error "'%s': does not have an 'external.desc'. See %s\n" \
             "${br2_ext}" "${MANUAL_URL}"
     fi
     br2_name="$(sed -r -e '/^name: +(.*)$/!d; s//\1/' "${br2_ext}/external.desc")"
@@ -103,8 +104,10 @@ do_validate_one() {
 
     # Register this br2-external tree, use an absolute canonical path
     br2_ext="$( cd "${br2_ext}"; pwd )"
+    br2_ver="$( support/scripts/setlocalversion "${br2_ext}" )"
     BR2_EXT_NAMES+=( "${br2_name}" )
     eval BR2_EXT_PATHS_${br2_name}="\"\${br2_ext}\""
+    eval BR2_EXT_VERS_${br2_name}="\"\${br2_ver}\""
     eval BR2_EXT_DESCS_${br2_name}="\"\${br2_desc:-\${br2_name}}\""
 }
 
@@ -112,7 +115,7 @@ do_validate_one() {
 # for the br2-external tree
 do_mk() {
     local outputdir="${1}"
-    local br2_name br2_desc br2_ext
+    local br2_name br2_desc br2_ext br2_ver
 
     {
         printf '#\n# Automatically generated file; DO NOT EDIT.\n#\n'
@@ -125,7 +128,7 @@ do_mk() {
         done
         printf '\n'
 
-        printf 'BR2_EXTERNAL_NAMES = \n'
+        printf 'export BR2_EXTERNAL_NAMES = \n'
         printf 'BR2_EXTERNAL_DIRS = \n'
         printf 'BR2_EXTERNAL_MKS = \n'
 
@@ -138,12 +141,14 @@ do_mk() {
         for br2_name in "${BR2_EXT_NAMES[@]}"; do
             eval br2_desc="\"\${BR2_EXT_DESCS_${br2_name}}\""
             eval br2_ext="\"\${BR2_EXT_PATHS_${br2_name}}\""
+            eval br2_ver="\"\${BR2_EXT_VERS_${br2_name}}\""
             printf '\n'
             printf 'BR2_EXTERNAL_NAMES += %s\n' "${br2_name}"
             printf 'BR2_EXTERNAL_DIRS += %s\n' "${br2_ext}"
             printf 'BR2_EXTERNAL_MKS += %s/external.mk\n' "${br2_ext}"
             printf 'export BR2_EXTERNAL_%s_PATH = %s\n' "${br2_name}" "${br2_ext}"
             printf 'export BR2_EXTERNAL_%s_DESC = %s\n' "${br2_name}" "${br2_desc}"
+            printf 'export BR2_EXTERNAL_%s_VERSION = %s\n' "${br2_name}" "${br2_ver}"
         done
     } >"${outputdir}/.br2-external.mk"
 }
@@ -151,7 +156,7 @@ do_mk() {
 # Generate the kconfig snippets for the br2-external tree.
 do_kconfig() {
     local outputdir="${1}"
-    local br2_name br2_desc br2_ext br2
+    local br2_name br2_desc br2_ext br2_ver br2
     local -a items
 
     items=(
@@ -160,6 +165,9 @@ do_kconfig() {
         toolchains
         jpeg
         openssl
+        skeleton
+        init
+        linux
     )
 
     for br2 in "${items[@]}"; do
@@ -177,14 +185,26 @@ do_kconfig() {
 
     printf 'menu "External options"\n\n' >>"${outputdir}/.br2-external.in.menus"
 
+    {
+        printf 'config BR2_EXTERNAL_NAMES\n'
+        printf '\tstring\n'
+        # Use star-expansion: we really one a single arg.
+        printf '\tdefault "%s"\n' "${BR2_EXT_NAMES[*]}"
+        printf '\n'
+    } >>"${outputdir}/.br2-external.in.paths"
+
     for br2_name in "${BR2_EXT_NAMES[@]}"; do
         eval br2_desc="\"\${BR2_EXT_DESCS_${br2_name}}\""
         eval br2_ext="\"\${BR2_EXT_PATHS_${br2_name}}\""
+        eval br2_ver="\"\${BR2_EXT_VERS_${br2_name}}\""
 
         {
             printf 'config BR2_EXTERNAL_%s_PATH\n' "${br2_name}"
             printf '\tstring\n'
             printf '\tdefault "%s"\n' "${br2_ext}"
+            printf 'config BR2_EXTERNAL_%s_VERSION\n' "${br2_name}"
+            printf '\tstring\n'
+            printf '\tdefault "%s"\n' "${br2_ver}"
             printf '\n'
         } >>"${outputdir}/.br2-external.in.paths"
 
@@ -223,6 +243,30 @@ do_kconfig() {
         else
             printf '# No openssl from: %s\n\n' "${br2_desc}"
         fi >>"${outputdir}/.br2-external.in.openssl"
+
+        if [ -f "${br2_ext}/provides/skeleton.in" ]; then
+            printf 'comment "skeleton from: %s"\n' "${br2_desc}"
+            printf 'source "%s/provides/skeleton.in"\n' "${br2_ext}"
+            printf '\n'
+        else
+            printf '# No skeleton from: %s\n\n' "${br2_desc}"
+        fi >>"${outputdir}/.br2-external.in.skeleton"
+
+        if [ -f "${br2_ext}/provides/init.in" ]; then
+            printf 'comment "init from: %s"\n' "${br2_desc}"
+            printf 'source "%s/provides/init.in"\n' "${br2_ext}"
+            printf '\n'
+        else
+            printf '# No init from: %s\n\n' "${br2_desc}"
+        fi >>"${outputdir}/.br2-external.in.init"
+
+        if [ -f "${br2_ext}/linux/Config.ext.in" ]; then
+            printf 'comment "linux extension from: %s"\n' "${br2_desc}"
+            printf 'source "%s/linux/Config.ext.in"\n' "${br2_ext}"
+            printf '\n'
+        else
+            printf '# No linux extension from: %s\n\n' "${br2_desc}"
+        fi >>"${outputdir}/.br2-external.in.linux"
     done
 
     printf 'endmenu\n' >>"${outputdir}/.br2-external.in.menus"

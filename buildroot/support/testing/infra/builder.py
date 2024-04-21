@@ -6,11 +6,29 @@ import infra
 
 
 class Builder(object):
-    def __init__(self, config, builddir, logtofile):
+    def __init__(self, config, builddir, logtofile, jlevel=None):
         self.config = '\n'.join([line.lstrip() for line in
                                  config.splitlines()]) + '\n'
         self.builddir = builddir
         self.logfile = infra.open_log_file(builddir, "build", logtofile)
+        self.jlevel = jlevel
+
+    def is_defconfig_valid(self, configfile, defconfig):
+        """Check if the .config is contains all lines present in the defconfig."""
+        with open(configfile) as configf:
+            configlines = configf.readlines()
+
+        defconfiglines = defconfig.split("\n")
+
+        # Check that all the defconfig lines are still present
+        for defconfigline in defconfiglines:
+            if defconfigline + "\n" not in configlines:
+                self.logfile.write("WARN: defconfig can't be used\n")
+                self.logfile.write("      Missing: %s\n" % defconfigline.strip())
+                self.logfile.flush()
+                return False
+
+        return True
 
     def configure(self, make_extra_opts=[], make_extra_env={}):
         """Configure the build.
@@ -47,6 +65,9 @@ class Builder(object):
         if ret != 0:
             raise SystemError("Cannot olddefconfig")
 
+        if not self.is_defconfig_valid(config_file, self.config):
+            raise SystemError("The defconfig is not valid")
+
     def build(self, make_extra_opts=[], make_extra_env={}):
         """Perform the build.
 
@@ -67,6 +88,8 @@ class Builder(object):
         env.update(make_extra_env)
 
         cmd = ["make", "-C", self.builddir]
+        if "BR2_PER_PACKAGE_DIRECTORIES=y" in self.config.splitlines() and self.jlevel:
+            cmd.append(f"-j{self.jlevel}")
         cmd += make_extra_opts
 
         ret = subprocess.call(cmd, stdout=self.logfile, stderr=self.logfile,

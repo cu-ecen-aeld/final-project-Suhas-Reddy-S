@@ -33,12 +33,10 @@ fi
 major_min=1
 minor_min=27
 
-# Maximal version = 1.29 (1.30 changed --numeric-owner output for
-# filenames > 100 characters). This is really a fix for a bug in
-# earlier tar versions regarding deterministic output so it is
-# unlikely to be reverted in later versions.
+# Maximal version = 1.34 (1.35 changed devmajor/devminor for files)
+# https://lists.gnu.org/archive/html/info-gnu/2023-07/msg00005.html
 major_max=1
-minor_max=29
+minor_max=34
 
 if [ $major -lt $major_min -o $major -gt $major_max ]; then
 	# echo nothing: no suitable tar found
