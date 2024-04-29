@@ -1,0 +1,4 @@
+config BR2_PACKAGE_MOTOR
+	bool "motor"
+	help
+	  Includes the motor application
