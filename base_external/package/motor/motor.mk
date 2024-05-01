@@ -6,7 +6,7 @@
 ##############################################################
 
 
-MOTOR_VERSION = 7ab02ceebdb2db388b8a28937861e69701d68525
+MOTOR_VERSION = 3151cb442c7ae2f8390829d459081ae49be51aab
 MOTOR_SITE = git@github.com:krishnasuhagiya29/final-project-assignment-krishna-suhas.git
 MOTOR_SITE_METHOD = git
 MOTOR_GIT_SUBMODULES = YES
