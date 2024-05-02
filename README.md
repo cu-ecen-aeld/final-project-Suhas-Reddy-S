@@ -2,10 +2,12 @@
 
 ## Project Overview
 
-[Project Overview](https://github.com/cu-ecen-aeld/final-project-Suhas-Reddy-S/wiki/Project-Overview)
+[Project Overview](https://github.com/krishnasuhagiya29/final-project-assignment-krishna-suhas/wiki/Project-Overview)
 
 ## Project Schedule
 
 [Project Schedule](https://github.com/users/krishnasuhagiya29/projects/1/views/1)
 
-## [Demo Video](https://www.youtube.com/watch?v=bZ-KuQsORQE)
+## Demo Video
+
+[Demo Video](https://www.youtube.com/watch?v=bZ-KuQsORQE)
